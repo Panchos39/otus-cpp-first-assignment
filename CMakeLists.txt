@@ -3,15 +3,23 @@ cmake_minimum_required(VERSION 3.2)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(helloworld VERSION ${PROJECT_VESRION})
+project(helloworld_cli VERSION ${PROJECT_VESRION})
+
+#set(CMAKE_BUILD_TYPE Debug)
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+
+conan_basic_setup(TARGETS)
+
 
 option(WITH_BOOST_TEST "Whether to build Boost test" ON)
 option(WITH_GOOGLE_TEST "Whether to build Google test" ON)
 
-configure_file(version.h.in version.h)
+include_directories(include)
 
-add_executable(helloworld_cli main.cpp)
-add_library(helloworld lib.cpp)
+configure_file(include/version.h.in include/version.h)
+
+add_executable(helloworld_cli src/main.cpp)
+add_library(helloworld src/lib.cpp)
 
 set_target_properties(helloworld_cli helloworld PROPERTIES
     CXX_STANDARD 14
@@ -19,56 +27,13 @@ set_target_properties(helloworld_cli helloworld PROPERTIES
 )
 
 target_include_directories(helloworld
-    PRIVATE "${CMAKE_BINARY_DIR}"
+    PRIVATE
+    "${CMAKE_BINARY_DIR}"
 )
 
 target_link_libraries(helloworld_cli PRIVATE
     helloworld
 )
-
-if(WITH_BOOST_TEST)
-    find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-    add_executable(test_version test_version.cpp)
-
-    set_target_properties(test_version PROPERTIES
-        CXX_STANDARD 14
-        CXX_STANDARD_REQUIRED ON
-    )
-
-    set_target_properties(test_version PROPERTIES
-        COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
-        INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR}
-    )
-
-    target_link_libraries(test_version
-        ${Boost_LIBRARIES}
-        helloworld
-    )
-endif()
-
-if(WITH_GOOGLE_TEST)
-    find_package(GTest REQUIRED)
-    add_executable(test_version_gtest test_version_gtest.cpp)
-    
-
-
-    set_target_properties(test_version_gtest PROPERTIES
-        CXX_STANDARD 14
-        CXX_STANDARD_REQUIRED ON
-    )
-
-    set_target_properties(test_version_gtest PROPERTIES
-        INCLUDE_DIRECTORIES 
-        ${GTEST_INCLUDE_DIRS}
-    )
-
-    # исполняемый файл тестов
-    
-    target_link_libraries(test_version_gtest 
-        ${GTEST_LIBRARIES} 
-        helloworld
-        pthread)
-endif()
 
 
 if (MSVC)
@@ -78,11 +43,6 @@ if (MSVC)
     target_compile_options(helloworld PRIVATE
         /W4
     )
-    if(WITH_BOOST_TEST)
-        target_compile_options(test_version PRIVATE
-            /W4
-        )
-    endif()
 else ()
     target_compile_options(helloworld_cli PRIVATE
         -Wall -Wextra -pedantic -Werror
@@ -90,11 +50,6 @@ else ()
     target_compile_options(helloworld PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
-    if(WITH_BOOST_TEST)
-        target_compile_options(test_version PRIVATE
-            -Wall -Wextra -pedantic -Werror
-        )
-    endif()
 endif()
 
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
@@ -106,12 +61,8 @@ set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
 set(CPACK_PACKAGE_CONTACT example@example.com)
 include(CPack)
 
-if(WITH_BOOST_TEST)
-    enable_testing()
-    add_test(test_version test_version)
-endif()
 
-if(WITH_GOOGLE_TEST)
+if(WITH_BOOST_TEST OR WITH_GOOGLE_TEST)
     enable_testing()
-    add_test(test_version_gtest test_version_gtest)
+    add_subdirectory(tests)
 endif()
