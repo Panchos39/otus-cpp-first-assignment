@@ -28,7 +28,7 @@ jobs:
       
       - name: Install dependencies
         run: conan install . -s build_type=${{env.BUILD_TYPE}} \
-                              --install-folder=${{github.workspace}}/build
+                              --of ${{github.workspace}}/build
       
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build \
