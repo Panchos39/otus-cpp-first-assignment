@@ -34,7 +34,7 @@ jobs:
         run: mkdir ${{github.workspace}}/build
 
       - name: Install dependencies
-        run: conan install . -s build_type=${{env.BUILD_TYPE}} --output-folder=${{github.workspace}}/build --build=missing
+        run: cd ${{github.workspace}}/build && conan install .. -s build_type=${{env.BUILD_TYPE}} --output-folder=${{github.workspace}}/build --build=missing
       
       - name: Check conan deps installation
         run: ls ${{github.workspace}}/build 
