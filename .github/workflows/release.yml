@@ -17,10 +17,13 @@ jobs:
         with:
           submodules: true
       - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.0
+        id : conan
+        uses: turtlebrowser/get-conan@main
         with:
           version: 1.60.2
-
+      - name: Conan version
+        run: echo "${{ steps.conan.outputs.version }}"
+      
       - name: Create default profile
         run: conan profile detect
       
@@ -59,6 +62,7 @@ jobs:
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
+      
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
